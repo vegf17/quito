@@ -1,0 +1,2 @@
+The total run time is 242.15s.
+The execution time of the quantum program is 238.50s.

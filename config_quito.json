@@ -1,0 +1,10 @@
+{
+    "quito_configuration":{
+        "coverage_criterion": "IC",
+        "K": 200,
+        "M": 20,
+        "BUDGET": 40,
+        "confidence_level": 0.01,
+        "statistical_test": "one-sample Wilcoxon signed rank test"
+    }
+}

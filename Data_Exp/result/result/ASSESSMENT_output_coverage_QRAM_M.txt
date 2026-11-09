@@ -1,0 +1,51 @@
+(00010,01): 8.750719436389502e-05; Result: Fail for OPO
+(00010,10): 8.750719436389502e-05; Result: Fail for OPO
+(00011,01): 9.159497725794874e-05; Result: Fail for OPO
+(00011,10): 9.159497725794874e-05; Result: Fail for OPO
+(00100,01): 0.7767824306310962; Result: Inconclusive
+(00100,11): 0.8272795830193073; Result: Inconclusive
+(00101,01): 1.0; Result: Inconclusive
+(00101,11): 0.824202636669659; Result: Inconclusive
+(00110,00): 9.146507981373568e-05; Result: Fail for OPO
+(00110,01): 9.146507981373568e-05; Result: Fail for OPO
+(00111,00): 9.515545596981947e-05; Result: Fail for OPO
+(00111,01): 9.515545596981947e-05; Result: Fail for OPO
+(01000,01): 0.6433840306584759; Result: Inconclusive
+(01000,10): 0.6433840306584759; Result: Inconclusive
+(01001,01): 0.9652587087271087; Result: Inconclusive
+(01001,10): 0.9652587087271087; Result: Inconclusive
+(01100,10): 0.16333515195044437; Result: Inconclusive
+(01100,11): 0.16333515195044437; Result: Inconclusive
+(01101,10): 0.42070483355320465; Result: Inconclusive
+(01101,11): 0.42070483355320465; Result: Inconclusive
+(01110,00): 8.021820895242208e-05; Result: Fail for OPO
+(01110,10): 8.021820895242208e-05; Result: Fail for OPO
+(01111,00): 6.890078141139081e-05; Result: Fail for OPO
+(01111,10): 6.890078141139081e-05; Result: Fail for OPO
+(10000,01): 0.13344917519553987; Result: Inconclusive
+(10000,11): 0.1916737416734228; Result: Inconclusive
+(10001,01): Not enough inputs for statistical test.
+(10001,11): Not enough inputs for statistical test.
+(10010,10): Not enough inputs for statistical test.
+(10010,11): Not enough inputs for statistical test.
+(10011,10): Not enough inputs for statistical test.
+(10011,11): Not enough inputs for statistical test.
+(10110,00): Not enough inputs for statistical test.
+(10110,11): Not enough inputs for statistical test.
+(10111,00): Not enough inputs for statistical test.
+(10111,11): Not enough inputs for statistical test.
+(11000,00): Not enough inputs for statistical test.
+(11000,01): Not enough inputs for statistical test.
+(11001,00): Not enough inputs for statistical test.
+(11001,01): Not enough inputs for statistical test.
+(11010,00): Not enough inputs for statistical test.
+(11010,10): Not enough inputs for statistical test.
+(11011,00): Not enough inputs for statistical test.
+(11011,10): Not enough inputs for statistical test.
+(11100,00): Not enough inputs for statistical test.
+(11100,11): Not enough inputs for statistical test.
+(11101,00): Not enough inputs for statistical test.
+(11101,11): Not enough inputs for statistical test.
+
+The total run time is 84.55s.
+The execution time of the quantum program is 83.76s.

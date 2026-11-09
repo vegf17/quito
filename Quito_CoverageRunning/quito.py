@@ -21,15 +21,18 @@ S_TEST = 'one-sample Wilcoxon signed rank test'
 T1=0
 T2=0
 START = 0
+EPSILON = 1e-9 #value used when checking the sum of the probabilities in the program specification file
 
 from qiskit import (
     #IBMQ,
     QuantumCircuit,
     QuantumRegister,
     ClassicalRegister,
-    execute,
-    Aer,
+    transpile
+    #execute, 
+    #Aer,
 )
+from qiskit_aer import AerSimulator
 from rpy2 import robjects as robjects
 import numpy as np
 import os
@@ -86,8 +89,8 @@ def check_full_ps(valid_input, p):
             end = index[i+1]
         for j in range(start,end):
             p_sum += p[j]
-        if p_sum != 1:
-            print("Error: This is not a complete program specification.")
+        if (1-EPSILON)>=p_sum or p_sum>=(1+EPSILON): #changed this line
+            print(f"Error: This is not a complete program specification.")
             end_running()
         else:
             p_sum = 0
@@ -105,7 +108,7 @@ def check_partial_ps(valid_input, valid_output, p):#check whether there is any i
             end = index[i+1]
         for j in range(start,end):
             p_sum += p[j]
-        if p_sum == 1:
+        if p_sum >= 1-EPSILON or p_sum <= 1+EPSILON: #changed this line
             for k in range(start,end):
                 input_full.append(valid_input[k])
                 output_full.append(valid_output[k])
@@ -126,19 +129,27 @@ def get_all(bit):
         all.append(i_bin)
     return all
 
-def execute_quantum_program(inputID, outputID, num_qubit, i, module_name):
+def execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name):
     q = QuantumRegister(num_qubit)
     c = ClassicalRegister(len(outputID))
-    qc = QuantumCircuit(q, c)
+    qc_init = QuantumCircuit(q, c)
+    qc_qasm = QuantumCircuit.from_qasm_file(root)
     for j in range(len(inputID)):
         # print(i)
         if i[len(inputID) - 1 - j] == '1':
             # print(int(inputID[j]))
-            qc.x(int(inputID[j]))
-    module = importlib.import_module(module_name)
-    run_method = getattr(module,"run")
-    run_method(qc)
-    result = execute(qc, Aer.get_backend('qasm_simulator'), shots=1).result().get_counts(qc)
+            qc_init.x(int(inputID[j]))
+    qc = qc_init.compose(qc_qasm)
+    #module = importlib.import_module(module_name)
+    #run_method = getattr(module,"run")
+    #run_method(qc)
+
+    #./tools/quito/sample/configuration.ini
+    # result = execute(qc, Aer.get_backend('qasm_simulator'), shots=1).result().get_counts(qc)
+    simulator = AerSimulator()
+    compiled_circuit = transpile(qc, simulator, optimization_level=0)
+    job = simulator.run(compiled_circuit, shots=1)
+    result = job.result().get_counts()
     return result
 
 def check_same(l,value):
@@ -184,13 +195,16 @@ def wilcoxon(fre,p):
 def judge_ass_result(inputs, outputs, pvalue, f):
     for i in range(len(pvalue)):
         if pvalue[i] == -1:
+            print(f"\t({str(inputs[i])}, {str(outputs[i])}): Not enough inputs for statistical test.")
             f.write("(" + str(inputs[i]) + "," + str(outputs[i]) + "): " + "Not enough inputs for statistical test.")
             f.write('\n')
         elif pvalue[i] < C_LEVEL:
+            print(f"\t({str(inputs[i])}, {str(outputs[i])}): {str(pvalue[i])}; Result: Fail for OPO")
             f.write("(" + str(inputs[i]) + "," + str(outputs[i]) + "): " + str(pvalue[i]) + "; ")
             f.write("Result: Fail for OPO")
             f.write('\n')
         elif pvalue[i] >= C_LEVEL:
+            print(f"\t({str(inputs[i])}, {str(outputs[i])}): {str(pvalue[i])}; Result: Inconclusive")
             f.write("(" + str(inputs[i]) + "," + str(outputs[i]) + "): " + str(pvalue[i]) + "; ")
             f.write("Result: Inconclusive")
             f.write('\n')
@@ -200,10 +214,11 @@ def process_bar(percent, start_str='', end_str='', total_length=0):
     bar = '\r' + start_str + bar.ljust(total_length) + ' {:0>4.1f}%|'.format(percent*100) + end_str
     print(bar, end='', flush=True)
 
-def input_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
+def input_coverage(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
     global T2
     #resultFolder = "./result/"
-    resultFolder = program_folder+ROOT+"result"+ROOT
+    #resultFolder = program_folder+ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
     unique_inputs = get_unique(valid_input)
@@ -222,11 +237,11 @@ def input_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, m
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co/K, start_str='',end_str='100%',total_length=30)
+            #process_bar(co/K, start_str='',end_str='100%',total_length=30)
             for i in unique_inputs: #i为input
                 count_cases += 1
                 start = time.time()
-                result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                 end = time.time()
                 T2 += end-start
                 input_file.write(str(i)+' ')
@@ -240,8 +255,8 @@ def input_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, m
                     result_file.write('The total number of test cases is ' + str(count_cases) + '.')
                     result_file.write('\n')
                     result_file.write('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
-                    # print("The total run time is " + "{:.2f}".format(T1) + "s.")
-                    # print('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
+                    print("\tThe total run time is " + "{:.2f}".format(T1) + "s.")
+                    print('\tThe execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
                     return
                     #end_running()
                 for mark in range(len(valid_input)):
@@ -281,9 +296,10 @@ def input_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, m
     ass_file.close()
 
 
-def input_coverage_partial(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
+def input_coverage_partial(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -306,11 +322,11 @@ def input_coverage_partial(inputID, valid_input, valid_output, num_qubit, output
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            #process_bar(co / K, start_str='', end_str='100%', total_length=30)
             for i in all_inputs: #i为input
                 count_cases += 1
                 start = time.time()
-                result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                 end = time.time()
                 T2 += end - start
                 input_file.write(str(i) + ' ')
@@ -326,8 +342,8 @@ def input_coverage_partial(inputID, valid_input, valid_output, num_qubit, output
                         result_file.write('The total number of test cases is ' + str(count_cases) + '.')
                         result_file.write('\n')
                         result_file.write('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
-                        print("The total run time is " + "{:.2f}".format(T1) + "s.")
-                        print('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
+                        print("\tThe total run time is " + "{:.2f}".format(T1) + "s.")
+                        print('\tThe execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
                         end_running()
                 #print('input='+i)
                 #print('output='+o)
@@ -366,9 +382,10 @@ def input_coverage_partial(inputID, valid_input, valid_output, num_qubit, output
     ass_file.close()
 
 
-def input_coverage_no(inputID, outputID, num_qubit, module_name, program_folder):
+def input_coverage_no(root, inputID, outputID, num_qubit, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -383,11 +400,11 @@ def input_coverage_no(inputID, outputID, num_qubit, module_name, program_folder)
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            #process_bar(co / K, start_str='', end_str='100%', total_length=30)
             for i in all_inputs: #i为input
                 count_cases += 1
                 start = time.time()
-                result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                 end = time.time()
                 T2 += end - start
                 input_file.write(str(i) + ' ')
@@ -405,9 +422,10 @@ def input_coverage_no(inputID, outputID, num_qubit, module_name, program_folder)
 
 
 
-def output_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
+def output_coverage(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -430,13 +448,13 @@ def output_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, 
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            #process_bar(co / K, start_str='', end_str='100%', total_length=30)
             exe_count = 0
             while True:
                 for i in unique_inputs:
                     count_cases += 1
                     start = time.time()
-                    result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                    result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                     end = time.time()
                     T2 += end - start
                     input_file.write(str(i) + ' ')
@@ -450,8 +468,8 @@ def output_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, 
                         result_file.write('The total number of test cases is ' + str(count_cases) + '.')
                         result_file.write('\n')
                         result_file.write('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
-                        print("The total run time is " + "{:.2f}".format(T1) + "s.")
-                        print('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
+                        print("\tThe total run time is " + "{:.2f}".format(T1) + "s.")
+                        print('\tThe execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
                         end_running()
                     for mark in range(len(valid_input)):
                         if valid_input[mark] == i and valid_output[mark] == o:
@@ -501,9 +519,10 @@ def output_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, 
     result_file.close()
     ass_file.close()
 
-def output_coverage_partial(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
+def output_coverage_partial(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -529,13 +548,13 @@ def output_coverage_partial(inputID, valid_input, valid_output, num_qubit, outpu
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            # process_bar(co / K, start_str='', end_str='100%', total_length=30)
             exe_count = 0
             while True:
                 for i in all_inputs:
                     count_cases += 1
                     start = time.time()
-                    result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                    result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                     end = time.time()
                     T2 += end - start
                     input_file.write(str(i) + ' ')
@@ -549,8 +568,8 @@ def output_coverage_partial(inputID, valid_input, valid_output, num_qubit, outpu
                             result_file.write('The total number of test cases is ' + str(count_cases) + '.')
                             result_file.write('\n')
                             result_file.write('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
-                            print("The total run time is " + "{:.2f}".format(T1) + "s.")
-                            print('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
+                            print("\tThe total run time is " + "{:.2f}".format(T1) + "s.")
+                            print('\tThe execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
                             end_running()
                     # print(i)
                     # print(result)
@@ -600,9 +619,10 @@ def output_coverage_partial(inputID, valid_input, valid_output, num_qubit, outpu
     result_file.close()
     ass_file.close()
 
-def output_coverage_no(inputID, outputID, num_qubit, module_name, program_folder):
+def output_coverage_no(root, inputID, outputID, num_qubit, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -620,13 +640,13 @@ def output_coverage_no(inputID, outputID, num_qubit, module_name, program_folder
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            # process_bar(co / K, start_str='', end_str='100%', total_length=30)
             exe_count = 0
             while True:
                 for i in all_inputs:
                     count_cases += 1
                     start = time.time()
-                    result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                    result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                     end = time.time()
                     T2 += end - start
                     input_file.write(str(i) + ' ')
@@ -654,9 +674,10 @@ def output_coverage_no(inputID, outputID, num_qubit, module_name, program_folder
     result_file.write('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
 
 
-def input_output_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
+def input_output_coverage(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -678,14 +699,14 @@ def input_output_coverage(inputID, valid_input, valid_output, num_qubit, outputI
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            # process_bar(co / K, start_str='', end_str='100%', total_length=30)
             i_index = 0
             for i in unique_inputs:
                 exe_count = 0 #count of executing of one input
                 while True:
                     count_cases += 1
                     start = time.time()
-                    result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                    result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                     end = time.time()
                     T2 += end - start
                     input_file.write(str(i) + ' ')
@@ -700,8 +721,8 @@ def input_output_coverage(inputID, valid_input, valid_output, num_qubit, outputI
                         result_file.write('The total number of test cases is ' + str(count_cases) + '.')
                         result_file.write('\n')
                         result_file.write('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
-                        print("The total run time is " + "{:.2f}".format(T1) + "s.")
-                        print('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
+                        print("\tThe total run time is " + "{:.2f}".format(T1) + "s.")
+                        print('\tThe execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
                         end_running()
                     for mark in range(len(valid_input)):
                         if valid_input[mark] == i and valid_output[mark] == o:
@@ -752,9 +773,10 @@ def input_output_coverage(inputID, valid_input, valid_output, num_qubit, outputI
     result_file.close()
     ass_file.close()
 
-def input_output_coverage_partial(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
+def input_output_coverage_partial(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -779,13 +801,13 @@ def input_output_coverage_partial(inputID, valid_input, valid_output, num_qubit,
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            # process_bar(co / K, start_str='', end_str='100%', total_length=30)
             for i in all_inputs:
                 exe_count = 0 #count of executing of one input
                 while True:
                     count_cases += 1
                     start = time.time()
-                    result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                    result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                     end = time.time()
                     T2 += end-start
                     input_file.write(str(i) + ' ')
@@ -800,8 +822,8 @@ def input_output_coverage_partial(inputID, valid_input, valid_output, num_qubit,
                             result_file.write('The total number of test cases is ' + str(count_cases) + '.')
                             result_file.write('\n')
                             result_file.write('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
-                            print("The total run time is " + "{:.2f}".format(T1) + "s.")
-                            print('The execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
+                            print("\tThe total run time is " + "{:.2f}".format(T1) + "s.")
+                            print('\tThe execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
                             end_running()
                     if flag[all_outputs.index(o)] == 0:
                         flag[all_outputs.index(o)] = 1
@@ -842,9 +864,10 @@ def input_output_coverage_partial(inputID, valid_input, valid_output, num_qubit,
     result_file.close()
     ass_file.close()
 
-def input_output_coverage_no(inputID, outputID, num_qubit, module_name, program_folder):
+def input_output_coverage_no(root, inputID, outputID, num_qubit, module_name, program_folder):
     global T2
-    resultFolder = program_folder + ROOT+"result"+ROOT
+    # resultFolder = program_folder + ROOT+"result"+ROOT
+    resultFolder = "./data/results/quito/"+module_name+"/"
     if not os.path.exists(resultFolder):
         os.makedirs(resultFolder)
 
@@ -862,13 +885,13 @@ def input_output_coverage_no(inputID, outputID, num_qubit, module_name, program_
     for g in range(M):
         for t in range(r):
             co += 1
-            process_bar(co / K, start_str='', end_str='100%', total_length=30)
+            # process_bar(co / K, start_str='', end_str='100%', total_length=30)
             for i in all_inputs:
                 exe_count = 0 #count of executing of one input
                 while True:
                     count_cases += 1
                     start = time.time()
-                    result = execute_quantum_program(inputID, outputID, num_qubit, i, module_name)
+                    result = execute_quantum_program(root, inputID, outputID, num_qubit, i, module_name)
                     end = time.time()
                     T2 += end-start
                     input_file.write(str(i) + ' ')
@@ -959,12 +982,14 @@ def check_bin(bin_str, n):
             end_running()
 
 
-def quito_run():
+def quito_run(root_con=None):
     global START
-    print("please enter the root of your configuration file.(.ini file)")
+    if root_con is None:
+        print("please enter the root of your configuration file.(.ini file)")
 
-    #get configuration file
-    root_con = input()
+        #get configuration file
+        root_con = input()
+
     START = time.time()
     if os.path.isfile(root_con) == True:
         config = configparser.ConfigParser(allow_no_value=True)
@@ -980,7 +1005,7 @@ def quito_run():
     print(ps_category)
     #get quantum program
     root = config.get('program','root')
-    # print(root)
+    #print(root)
 
     if os.path.isfile(root) != True:
         print("Error: Quito cannot find the quantum program file.")
@@ -1029,7 +1054,7 @@ def quito_run():
 
     if ps_category == 'no':
         if coverage_criterion == 'IC':
-            input_coverage_no(inputID, outputID, num_qubit, module_name, program_folder)
+            input_coverage_no(root, inputID, outputID, num_qubit, module_name, program_folder)
         else:
             BUDGET = pow(2, len(inputID)) * 10  # default
             if config.get('quito_configuration', 'BUDGET') != None:
@@ -1040,9 +1065,9 @@ def quito_run():
                 print("Error: Budget is smaller than the number of inputs.")
                 end_running()
             if coverage_criterion == 'OC':
-                output_coverage_no(inputID, outputID, num_qubit, module_name, program_folder)
+                output_coverage_no(root, inputID, outputID, num_qubit, module_name, program_folder)
             elif coverage_criterion == 'IOC':
-                input_output_coverage_no(inputID, outputID, num_qubit, module_name, program_folder)
+                input_output_coverage_no(root, inputID, outputID, num_qubit, module_name, program_folder)
 
 
     else:
@@ -1097,19 +1122,21 @@ def quito_run():
 
         if ps_category == 'full':
             if coverage_criterion == 'IC':
-                input_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
+                input_coverage(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
             elif coverage_criterion == 'OC':
-                output_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
+                output_coverage(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
             elif coverage_criterion == 'IOC':
-                input_output_coverage(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
+                input_output_coverage(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
 
         if ps_category == 'partial':
             if coverage_criterion == 'IC':
-                input_coverage_partial(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
+                input_coverage_partial(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
             elif coverage_criterion == 'OC':
-                output_coverage_partial(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
+                output_coverage_partial(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
             elif coverage_criterion == 'IOC':
-                input_output_coverage_partial(inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
+                input_output_coverage_partial(root, inputID, valid_input, valid_output, num_qubit, outputID, p, module_name, program_folder)
+
+    print('\tThe execution time of the quantum program is ' + "{:.2f}".format(T2) + "s.")
 
 def user_input():
     print('\n')
@@ -1187,7 +1214,7 @@ def example_file():
     print("The example is shown below:")
     example = '''
 [program]
-root=C:\program_run.py
+root=C:\\program_run.py
 num_qubit=3
 inputID=0,1
 outputID=2

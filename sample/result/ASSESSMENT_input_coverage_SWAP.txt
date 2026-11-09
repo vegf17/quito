@@ -1,0 +1,6 @@
+(00,1): 1; Result: Inconclusive
+(01,0): 0.04296875; Result: Inconclusive
+(01,1): 0.04296875; Result: Inconclusive
+(10,0): 0.0625; Result: Inconclusive
+(10,1): 0.0625; Result: Inconclusive
+(11,1): 1; Result: Inconclusive

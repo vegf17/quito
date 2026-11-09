@@ -1,0 +1,48 @@
+(00010,01): 9.555744839077448e-05; Result: Fail for OPO
+(00010,10): 9.555744839077448e-05; Result: Fail for OPO
+(00011,01): 1.9073486328125e-06; Result: Fail for OPO
+(00011,10): 1.9073486328125e-06; Result: Fail for OPO
+(00100,01): 0.8408222198486328; Result: Inconclusive
+(00100,11): 0.8408222198486328; Result: Inconclusive
+(00101,01): 0.36827659606933594; Result: Inconclusive
+(00101,11): 0.36827659606933594; Result: Inconclusive
+(00110,00): 1.9073486328125e-06; Result: Fail for OPO
+(00110,01): 1.9073486328125e-06; Result: Fail for OPO
+(00111,00): 1.9073486328125e-06; Result: Fail for OPO
+(00111,01): 1.9073486328125e-06; Result: Fail for OPO
+(01000,01): 0.2707183854741406; Result: Inconclusive
+(01000,10): 0.2707183854741406; Result: Inconclusive
+(01001,01): 0.7936497510065456; Result: Inconclusive
+(01001,10): 0.7936497510065456; Result: Inconclusive
+(01100,10): 0.13272666931152344; Result: Inconclusive
+(01100,11): 0.13272666931152344; Result: Inconclusive
+(01101,10): 0.11193262493779423; Result: Inconclusive
+(01101,11): 0.11193262493779423; Result: Inconclusive
+(01110,00): 1.9073486328125e-06; Result: Fail for OPO
+(01110,10): 1.9073486328125e-06; Result: Fail for OPO
+(01111,00): 9.555744839077448e-05; Result: Fail for OPO
+(01111,10): 9.555744839077448e-05; Result: Fail for OPO
+(10000,01): 0.1976758133696655; Result: Inconclusive
+(10000,11): 0.1976758133696655; Result: Inconclusive
+(10001,01): 0.9851059871986608; Result: Inconclusive
+(10001,11): 0.9851059871986608; Result: Inconclusive
+(10010,10): 1.9073486328125e-06; Result: Fail for OPO
+(10010,11): 1.9073486328125e-06; Result: Fail for OPO
+(10011,10): 1.9073486328125e-06; Result: Fail for OPO
+(10011,11): 1.9073486328125e-06; Result: Fail for OPO
+(10110,00): 9.555744839077448e-05; Result: Fail for OPO
+(10110,11): 9.555744839077448e-05; Result: Fail for OPO
+(10111,00): 1.9073486328125e-06; Result: Fail for OPO
+(10111,11): 1.9073486328125e-06; Result: Fail for OPO
+(11000,00): 0.36522751850153073; Result: Inconclusive
+(11000,01): 0.36522751850153073; Result: Inconclusive
+(11001,00): 0.38692523378383376; Result: Inconclusive
+(11001,01): 0.38692523378383376; Result: Inconclusive
+(11010,00): 1.9073486328125e-06; Result: Fail for OPO
+(11010,10): 1.9073486328125e-06; Result: Fail for OPO
+(11011,00): 1.9073486328125e-06; Result: Fail for OPO
+(11011,10): 1.9073486328125e-06; Result: Fail for OPO
+(11100,00): 0.2773551940917969; Result: Inconclusive
+(11100,11): 0.2773551940917969; Result: Inconclusive
+(11101,00): 0.05316925048828125; Result: Inconclusive
+(11101,11): 0.05316925048828125; Result: Inconclusive
