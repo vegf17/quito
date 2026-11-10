@@ -6,7 +6,7 @@ from qiskit import (
     execute,
     Aer,
 )
-from qiskit.tools.visualization import circuit_drawer
+from qiskit.visualization import circuit_drawer
 
 def run(qc):
     qc.h(2)
