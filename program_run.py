@@ -1,10 +1,7 @@
 from qiskit import (
-    #IBMQ,
     QuantumCircuit,
     QuantumRegister,
-    ClassicalRegister,
-    execute,
-    Aer,
+    ClassicalRegister
 )
 from qiskit.visualization import circuit_drawer
 
@@ -15,9 +12,10 @@ def run(qc):
     qc.x(2)
     qc.measure(2,0)
 
+    return circuit_drawer(qc)
     #circuit_drawer(qc, filename='./swap_circuit')
     
-
+print(run(QuantumCircuit(3,3)))
 
 
 

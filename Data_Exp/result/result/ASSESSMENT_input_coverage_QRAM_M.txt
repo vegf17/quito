@@ -1,0 +1,51 @@
+(00010,01): 9.068863052776127e-05; Result: Fail for OPO
+(00010,10): 9.068863052776127e-05; Result: Fail for OPO
+(00011,01): 8.826287517728182e-05; Result: Fail for OPO
+(00011,10): 8.826287517728182e-05; Result: Fail for OPO
+(00100,01): 0.9036452343514005; Result: Inconclusive
+(00100,11): 0.9677792223340378; Result: Inconclusive
+(00101,01): 0.36406963219969923; Result: Inconclusive
+(00101,11): 0.3375490700266886; Result: Inconclusive
+(00110,00): 9.017378624633378e-05; Result: Fail for OPO
+(00110,01): 9.017378624633378e-05; Result: Fail for OPO
+(00111,00): 9.043093004007695e-05; Result: Fail for OPO
+(00111,01): 9.043093004007695e-05; Result: Fail for OPO
+(01000,01): 0.47567526304840246; Result: Inconclusive
+(01000,10): 0.5371513156503488; Result: Inconclusive
+(01001,01): 0.4194878515453213; Result: Inconclusive
+(01001,10): 0.4447918185651023; Result: Inconclusive
+(01100,10): 0.4795897710096283; Result: Inconclusive
+(01100,11): 0.4670816241499966; Result: Inconclusive
+(01101,10): 0.6716884791697022; Result: Inconclusive
+(01101,11): 0.7017492484556602; Result: Inconclusive
+(01110,00): 8.978911268223681e-05; Result: Fail for OPO
+(01110,10): 8.978911268223681e-05; Result: Fail for OPO
+(01111,00): 8.978911268223681e-05; Result: Fail for OPO
+(01111,10): 8.978911268223681e-05; Result: Fail for OPO
+(10000,01): 0.4069593323663133; Result: Inconclusive
+(10000,11): 0.37379452503203486; Result: Inconclusive
+(10001,01): 0.10199203687095507; Result: Inconclusive
+(10001,11): 0.09290328709689509; Result: Inconclusive
+(10010,10): 8.713120442273707e-05; Result: Fail for OPO
+(10010,11): 8.713120442273707e-05; Result: Fail for OPO
+(10011,10): 8.788441709029011e-05; Result: Fail for OPO
+(10011,11): 8.788441709029011e-05; Result: Fail for OPO
+(10110,00): 9.172501473764481e-05; Result: Fail for OPO
+(10110,11): 9.172501473764481e-05; Result: Fail for OPO
+(10111,00): 9.356029688239182e-05; Result: Fail for OPO
+(10111,11): 9.356029688239182e-05; Result: Fail for OPO
+(11000,00): 0.2909381593240042; Result: Inconclusive
+(11000,01): 0.31750795439455165; Result: Inconclusive
+(11001,00): 0.3383130271021713; Result: Inconclusive
+(11001,01): 0.2386191179021766; Result: Inconclusive
+(11010,00): 9.2377306023683e-05; Result: Fail for OPO
+(11010,10): 9.2377306023683e-05; Result: Fail for OPO
+(11011,00): 9.250818572966845e-05; Result: Fail for OPO
+(11011,10): 9.250818572966845e-05; Result: Fail for OPO
+(11100,00): 0.8243083271555138; Result: Inconclusive
+(11100,11): 0.9194974071638645; Result: Inconclusive
+(11101,00): 0.22120447621782088; Result: Inconclusive
+(11101,11): 0.1761742139411579; Result: Inconclusive
+
+The total run time is 279.30s.
+The execution time of the quantum program is 275.02s.
